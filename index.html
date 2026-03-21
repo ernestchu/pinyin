@@ -8,7 +8,27 @@
         :root { --primary: #4a90e2; --success: #47cf73; --bg: #f5f7fa; }
         body { font-family: sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; margin-bottom: 30px; }
-        .question { font-size: 5rem; margin: 10px 0; color: #333; }
+        .question { font-size: 5rem; margin: 10px 0; color: #333; line-height: 1.2; }
+        
+        /* 等級切換按鈕 */
+        .level-selector { display: flex; gap: 8px; margin-bottom: 20px; }
+        .level-btn { 
+            padding: 8px 16px; 
+            border: 1px solid #ddd; 
+            background: white; 
+            border-radius: 20px; 
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .level-btn.active { 
+            background: var(--primary); 
+            color: white; 
+            border-color: var(--primary);
+            box-shadow: 0 2px 4px rgba(74,144,226,0.3);
+        }
+        
         .hint { color: #e74c3c; font-weight: bold; height: 1.5em; margin-bottom: 10px; }
         input { width: 80%; padding: 12px; font-size: 1.5rem; border: 2px solid #ddd; border-radius: 8px; text-align: center; outline: none; }
         input.correct { border-color: var(--success); background-color: #e8f5e9; }
@@ -62,6 +82,13 @@
 
     <h1>拼音快速練習</h1>
 
+    <!-- 等級切換 -->
+    <div class="level-selector">
+        <button class="level-btn active" onclick="setLevel(1)">Level 1: 基礎</button>
+        <button class="level-btn" onclick="setLevel(2)">Level 2: 進階</button>
+        <button class="level-btn" onclick="setLevel(3)">Level 3: 組合</button>
+    </div>
+
     <div class="card">
         <div class="question" id="target-zhuyin">ㄅ</div>
         <div class="hint" id="hint-text"></div>
@@ -75,6 +102,7 @@
     <script>
         const sections = [
             {
+                id: 'initials',
                 title: '聲母',
                 items: [
                     {z: 'ㄅ', p: 'b'}, {z: 'ㄆ', p: 'p'}, {z: 'ㄇ', p: 'm'}, {z: 'ㄈ', p: 'f'},
@@ -86,14 +114,17 @@
                 ]
             },
             {
+                id: 'finals',
                 title: '韻母',
                 items: [
-                    {z: 'ㄚ', p: 'a'}, {z: 'ㄛ', p: 'o'}, {z: 'ㄜ', p: 'e'}, {z: 'ㄝ', p: 'e'},
-                    {z: 'ㄞ', p: 'ai'}, {z: 'ㄟ', p: 'ei'}, {z: 'ㄠ', p: 'ao'}, {z: 'ㄡ', p: 'ou'},
-                    {z: 'ㄢ', p: 'an'}, {z: 'ㄣ', p: 'en'}, {z: 'ㄤ', p: 'ang'}, {z: 'ㄥ', p: 'eng'}, {z: 'ㄦ', p: 'er'}
+                    {z: 'ㄚ', p: 'a', a: 'a'}, {z: 'ㄛ', p: 'o', a: 'o'}, {z: 'ㄜ', p: 'e', a: 'e'}, {z: 'ㄝ', p: 'e', a: 'e'},
+                    {z: 'ㄞ', p: 'ai', a: 'ai'}, {z: 'ㄟ', p: 'ei', a: 'ei'}, {z: 'ㄠ', p: 'ao', a: 'ao'}, {z: 'ㄡ', p: 'ou', a: 'ou'},
+                    {z: 'ㄢ', p: 'an', a: 'an'}, {z: 'ㄣ', p: 'en', a: 'en'}, {z: 'ㄤ', p: 'ang', a: 'ang'}, {z: 'ㄥ', p: 'eng', a: 'eng'}, 
+                    {z: 'ㄦ', p: 'er', a: 'er'}
                 ]
             },
             {
+                id: 'yi',
                 title: '進階韻母 (ㄧ)',
                 items: [
                     {z: 'ㄧ', p: 'yi', a: 'i'}, {z: 'ㄧㄚ', p: 'ya', a: 'ia'}, {z: 'ㄧㄛ', p: 'yo', a: 'io'}, 
@@ -103,6 +134,7 @@
                 ]
             },
             {
+                id: 'wu',
                 title: '進階韻母 (ㄨ)',
                 items: [
                     {z: 'ㄨ', p: 'wu', a: 'u'}, {z: 'ㄨㄚ', p: 'wa', a: 'ua'}, {z: 'ㄨㄛ', p: 'wo', a: 'uo'}, 
@@ -111,6 +143,7 @@
                 ]
             },
             {
+                id: 'yu',
                 title: '進階韻母 (ㄩ)',
                 items: [
                     {z: 'ㄩ', p: 'yu', a: 'u'}, {z: 'ㄩㄝ', p: 'yue', a: 'ue'}, {z: 'ㄩㄢ', p: 'yuan', a: 'uan'}, 
@@ -118,6 +151,7 @@
                 ]
             },
             {
+                id: 'special',
                 title: '特殊組合',
                 items: [
                     {z: 'ㄋㄩ', p: 'nv'}, {z: 'ㄌㄩ', p: 'lv'}
@@ -126,7 +160,87 @@
         ];
 
         // 扁平化資料用於練習
-        const data = sections.flatMap(s => s.items);
+        let currentLevel = 1;
+        const qEl = document.getElementById('target-zhuyin');
+        const hEl = document.getElementById('hint-text');
+        const iEl = document.getElementById('pinyin-input');
+        let currentItem = {};
+
+        function setLevel(lv) {
+            currentLevel = lv;
+            document.querySelectorAll('.level-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx + 1 === lv);
+            });
+            next();
+        }
+
+        function next() {
+            let pool = [];
+            if (currentLevel >= 1) {
+                pool = pool.concat(sections.find(s => s.id === 'initials').items);
+                pool = pool.concat(sections.find(s => s.id === 'finals').items);
+            }
+            if (currentLevel >= 2) {
+                pool = pool.concat(sections.find(s => s.id === 'yi').items);
+                pool = pool.concat(sections.find(s => s.id === 'wu').items);
+                pool = pool.concat(sections.find(s => s.id === 'yu').items);
+                pool = pool.concat(sections.find(s => s.id === 'special').items);
+            }
+
+            // Level 3 有 50% 機率生成組合
+            if (currentLevel === 3 && Math.random() > 0.5) {
+                currentItem = generateCombination();
+            } else {
+                currentItem = pool[Math.floor(Math.random() * pool.length)];
+            }
+
+            qEl.innerText = currentItem.z;
+            hEl.innerText = "";
+            iEl.value = "";
+            iEl.classList.remove('correct');
+        }
+
+        function generateCombination() {
+            const initials = sections.find(s => s.id === 'initials').items;
+            const allFinals = [
+                ...sections.find(s => s.id === 'finals').items,
+                ...sections.find(s => s.id === 'yi').items,
+                ...sections.find(s => s.id === 'wu').items,
+                ...sections.find(s => s.id === 'yu').items
+            ];
+            
+            // 隨選一個聲母和一個韻母
+            const init = initials[Math.floor(Math.random() * initials.length)];
+            const fin = allFinals[Math.floor(Math.random() * allFinals.length)];
+
+            // 處理排除規則 (簡單版)
+            // 1. ㄦ 不與聲母組合
+            if (fin.z === 'ㄦ') return generateCombination();
+            // 2. j/q/x 只與 i/u(yu) 組合
+            const isJQX = ['j', 'q', 'x'].includes(init.p);
+            const isIU = fin.z.startsWith('ㄧ') || fin.z.startsWith('ㄩ');
+            if (isJQX && !isIU) return generateCombination();
+            if (!isJQX && (init.p !== 'n' && init.p !== 'l') && fin.z.startsWith('ㄩ')) {
+                // 其他聲母不與 ㄩ 組合 (除了 n, l)
+                if (!['zh','ch','sh','r','z','c','s'].includes(init.p)) return generateCombination();
+            }
+
+            let pinyin = init.p + fin.a;
+
+            // 特殊拼寫規則
+            // j/q/x + u... -> u (事實上是 ü，但在 input 通常打 u)
+            // n/l + u... (ㄩ) -> v
+            if (fin.z.startsWith('ㄩ')) {
+                if (init.p === 'n' || init.p === 'l') {
+                    pinyin = init.p + 'v' + (fin.a === 'u' ? '' : fin.a.substring(1));
+                }
+            }
+
+            return {
+                z: init.z + fin.z,
+                p: pinyin
+            };
+        }
 
         // 生成對照表
         const cheatSheet = document.getElementById('sheet');
@@ -144,18 +258,18 @@
             html += '</tr>';
 
             // 拼音列 (單獨/主要)
-            const label = section.items[0].a ? '拼音 (單獨)' : '拼音';
+            const label = section.items[0].a && section.items[0].a !== section.items[0].p ? '拼音 (單獨)' : '拼音';
             html += `<tr><td class="row-label">${label}</td>`;
             section.items.forEach(item => {
                 html += `<td class="pinyin-cell">${item.p}</td>`;
             });
             html += '</tr>';
 
-            // 聲母之後列 (如有)
-            if (section.items[0].a) {
+            // 聲母之後列 (如有且不重複)
+            if (section.items.some(item => item.a && item.a !== item.p)) {
                 html += '<tr><td class="row-label">拼音 (聲母之後)</td>';
                 section.items.forEach(item => {
-                    html += `<td class="pinyin-cell after-cell">${item.a}</td>`;
+                    html += `<td class="pinyin-cell after-cell">${item.a || item.p}</td>`;
                 });
                 html += '</tr>';
             }
@@ -165,22 +279,8 @@
             cheatSheet.appendChild(sectionDiv);
         });
 
-        let currentItem = {};
-        const qEl = document.getElementById('target-zhuyin');
-        const hEl = document.getElementById('hint-text');
-        const iEl = document.getElementById('pinyin-input');
-
-        function next() {
-            currentItem = data[Math.floor(Math.random() * data.length)];
-            qEl.innerText = currentItem.z;
-            hEl.innerText = "";
-            iEl.value = "";
-            iEl.classList.remove('correct');
-        }
-
         iEl.addEventListener('input', (e) => {
             const val = e.target.value.toLowerCase().trim();
-            // 判斷是否正確 (部分組合可能有兩個正確答案，但這裡以單獨形式為主)
             if (val === currentItem.p) {
                 iEl.classList.add('correct');
                 setTimeout(next, 400);
