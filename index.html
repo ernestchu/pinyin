@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注音轉拼音：全方位練習器</title>
+    <style>
+        :root { --primary: #4a90e2; --success: #47cf73; --bg: #f5f7fa; }
+        body { font-family: sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; margin-bottom: 30px; }
+        .question { font-size: 5rem; margin: 10px 0; color: #333; }
+        .hint { color: #e74c3c; font-weight: bold; height: 1.5em; margin-bottom: 10px; }
+        input { width: 80%; padding: 12px; font-size: 1.5rem; border: 2px solid #ddd; border-radius: 8px; text-align: center; outline: none; }
+        input.correct { border-color: var(--success); background-color: #e8f5e9; }
+        
+        /* 修正後的對照表佈局 */
+        .cheat-sheet { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            justify-content: center; 
+            max-width: 800px; 
+        }
+        .item { 
+            background: white; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            padding: 8px 12px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            min-width: 45px;
+        }
+        .item .zhuyin { font-weight: bold; color: #333; border-bottom: 1px solid #eee; margin-bottom: 4px; width: 100%; text-align: center; }
+        .item .pinyin { color: var(--primary); font-family: monospace; font-size: 1.1rem; }
+        .special { background: #fff9c4; border-color: #fbc02d; } /* 特別標示容易混淆的 */
+        
+        h3 { margin-top: 40px; color: #555; }
+    </style>
+</head>
+<body>
+
+    <h1>拼音快速練習</h1>
+
+    <div class="card">
+        <div class="question" id="target-zhuyin">ㄅ</div>
+        <div class="hint" id="hint-text"></div>
+        <input type="text" id="pinyin-input" placeholder="打出對應拼音..." autocomplete="off">
+        <p style="color:#888; font-size: 0.8rem; margin-top: 15px;">(不需輸入聲調)</p>
+    </div>
+
+    <h3>快速對照表</h3>
+    <div class="cheat-sheet" id="sheet">
+        </div>
+
+    <script>
+        const data = [
+            {z: 'ㄅ', p: 'b'}, {z: 'ㄆ', p: 'p'}, {z: 'ㄇ', p: 'm'}, {z: 'ㄈ', p: 'f'},
+            {z: 'ㄉ', p: 'd'}, {z: 'ㄊ', p: 't'}, {z: 'ㄋ', p: 'n'}, {z: 'ㄌ', p: 'l'},
+            {z: 'ㄍ', p: 'g'}, {z: 'ㄎ', p: 'k'}, {z: 'ㄏ', p: 'h'},
+            {z: 'ㄐ', p: 'j', s:true}, {z: 'ㄑ', p: 'q', s:true}, {z: 'ㄒ', p: 'x', s:true},
+            {z: 'ㄓ', p: 'zh'}, {z: 'ㄔ', p: 'ch'}, {z: 'ㄕ', p: 'sh'}, {z: 'ㄖ', p: 'r'},
+            {z: 'ㄗ', p: 'z'}, {z: 'ㄘ', p: 'c'}, {z: 'ㄙ', p: 's'},
+            {z: 'ㄧ', p: 'i'}, {z: 'ㄨ', p: 'u'}, {z: 'ㄩ', p: 'v', s:true},
+            {z: 'ㄚ', p: 'a'}, {z: 'ㄛ', p: 'o'}, {z: 'ㄜ', p: 'e'}, {z: 'ㄝ', p: 'e'},
+            {z: 'ㄞ', p: 'ai'}, {z: 'ㄟ', p: 'ei'}, {z: 'ㄠ', p: 'ao'}, {z: 'ㄡ', p: 'ou'},
+            {z: 'ㄢ', p: 'an'}, {z: 'ㄣ', p: 'en'}, {z: 'ㄤ', p: 'ang'}, {z: 'ㄥ', p: 'eng'}, {z: 'ㄦ', p: 'er'}
+        ];
+
+        // 生成對照表
+        const sheet = document.getElementById('sheet');
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = `item ${item.s ? 'special' : ''}`;
+            div.innerHTML = `<span class="zhuyin">${item.z}</span><span class="pinyin">${item.p}</span>`;
+            sheet.appendChild(div);
+        });
+
+        let currentItem = {};
+        const qEl = document.getElementById('target-zhuyin');
+        const hEl = document.getElementById('hint-text');
+        const iEl = document.getElementById('pinyin-input');
+
+        function next() {
+            currentItem = data[Math.floor(Math.random() * data.length)];
+            qEl.innerText = currentItem.z;
+            hEl.innerText = "";
+            iEl.value = "";
+            iEl.classList.remove('correct');
+        }
+
+        iEl.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase().trim();
+            if (val === currentItem.p) {
+                iEl.classList.add('correct');
+                setTimeout(next, 400);
+            } else if (val.length >= currentItem.p.length) {
+                hEl.innerText = `提示：${currentItem.p}`;
+            }
+        });
+
+        next();
+    </script>
+</body>
+</html>
