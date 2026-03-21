@@ -13,28 +13,48 @@
         input { width: 80%; padding: 12px; font-size: 1.5rem; border: 2px solid #ddd; border-radius: 8px; text-align: center; outline: none; }
         input.correct { border-color: var(--success); background-color: #e8f5e9; }
         
-        /* 修正後的對照表佈局 */
+        /* 對照表佈局 */
         .cheat-sheet { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 10px; 
-            justify-content: center; 
-            max-width: 800px; 
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 50px;
         }
-        .item { 
-            background: white; 
-            border: 1px solid #ddd; 
-            border-radius: 6px; 
-            padding: 8px 12px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-            min-width: 45px;
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            overflow-x: auto;
         }
-        .item .zhuyin { font-weight: bold; color: #333; border-bottom: 1px solid #eee; margin-bottom: 4px; width: 100%; text-align: center; }
-        .item .pinyin { color: var(--primary); font-family: monospace; font-size: 1.1rem; }
-        .special { background: #fff9c4; border-color: #fbc02d; } /* 特別標示容易混淆的 */
+        .section h2 { 
+            margin-top: 0; 
+            font-size: 1.2rem; 
+            color: #333; 
+            border-left: 4px solid var(--primary); 
+            padding-left: 10px;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        th, td {
+            border: 1px solid #eee;
+            padding: 10px 4px;
+            text-align: center;
+            min-width: 40px;
+        }
+        th { background: #fcfcfc; color: #777; font-weight: normal; font-size: 0.8rem; }
+        .row-label { background: #f8f9fa; color: #666; font-weight: bold; width: 100px; min-width: 100px; }
+        .zhuyin-cell { font-weight: bold; font-size: 1.1rem; color: #333; }
+        .pinyin-cell { color: var(--primary); font-family: monospace; }
+        .after-cell { color: #e67e22; }
+        .special { background: #fff9c4 !important; }
         
+        h1 { margin-bottom: 10px; }
         h3 { margin-top: 40px; color: #555; }
     </style>
 </head>
@@ -53,26 +73,96 @@
     <div class="cheat-sheet" id="sheet"></div>
 
     <script>
-        const data = [
-            {z: 'ㄅ', p: 'b'}, {z: 'ㄆ', p: 'p'}, {z: 'ㄇ', p: 'm'}, {z: 'ㄈ', p: 'f'},
-            {z: 'ㄉ', p: 'd'}, {z: 'ㄊ', p: 't'}, {z: 'ㄋ', p: 'n'}, {z: 'ㄌ', p: 'l'},
-            {z: 'ㄍ', p: 'g'}, {z: 'ㄎ', p: 'k'}, {z: 'ㄏ', p: 'h'},
-            {z: 'ㄐ', p: 'j', s:true}, {z: 'ㄑ', p: 'q', s:true}, {z: 'ㄒ', p: 'x', s:true},
-            {z: 'ㄓ', p: 'zh'}, {z: 'ㄔ', p: 'ch'}, {z: 'ㄕ', p: 'sh'}, {z: 'ㄖ', p: 'r'},
-            {z: 'ㄗ', p: 'z'}, {z: 'ㄘ', p: 'c'}, {z: 'ㄙ', p: 's'},
-            {z: 'ㄧ', p: 'i'}, {z: 'ㄨ', p: 'u'}, {z: 'ㄩ', p: 'v', s:true},
-            {z: 'ㄚ', p: 'a'}, {z: 'ㄛ', p: 'o'}, {z: 'ㄜ', p: 'e'}, {z: 'ㄝ', p: 'e'},
-            {z: 'ㄞ', p: 'ai'}, {z: 'ㄟ', p: 'ei'}, {z: 'ㄠ', p: 'ao'}, {z: 'ㄡ', p: 'ou'},
-            {z: 'ㄢ', p: 'an'}, {z: 'ㄣ', p: 'en'}, {z: 'ㄤ', p: 'ang'}, {z: 'ㄥ', p: 'eng'}, {z: 'ㄦ', p: 'er'}
+        const sections = [
+            {
+                title: '聲母',
+                items: [
+                    {z: 'ㄅ', p: 'b'}, {z: 'ㄆ', p: 'p'}, {z: 'ㄇ', p: 'm'}, {z: 'ㄈ', p: 'f'},
+                    {z: 'ㄉ', p: 'd'}, {z: 'ㄊ', p: 't'}, {z: 'ㄋ', p: 'n'}, {z: 'ㄌ', p: 'l'},
+                    {z: 'ㄍ', p: 'g'}, {z: 'ㄎ', p: 'k'}, {z: 'ㄏ', p: 'h'},
+                    {z: 'ㄐ', p: 'j'}, {z: 'ㄑ', p: 'q'}, {z: 'ㄒ', p: 'x'},
+                    {z: 'ㄓ', p: 'zh'}, {z: 'ㄔ', p: 'ch'}, {z: 'ㄕ', p: 'sh'}, {z: 'ㄖ', p: 'r'},
+                    {z: 'ㄗ', p: 'z'}, {z: 'ㄘ', p: 'c'}, {z: 'ㄙ', p: 's'}
+                ]
+            },
+            {
+                title: '韻母',
+                items: [
+                    {z: 'ㄚ', p: 'a'}, {z: 'ㄛ', p: 'o'}, {z: 'ㄜ', p: 'e'}, {z: 'ㄝ', p: 'e'},
+                    {z: 'ㄞ', p: 'ai'}, {z: 'ㄟ', p: 'ei'}, {z: 'ㄠ', p: 'ao'}, {z: 'ㄡ', p: 'ou'},
+                    {z: 'ㄢ', p: 'an'}, {z: 'ㄣ', p: 'en'}, {z: 'ㄤ', p: 'ang'}, {z: 'ㄥ', p: 'eng'}, {z: 'ㄦ', p: 'er'}
+                ]
+            },
+            {
+                title: '進階韻母 (ㄧ)',
+                items: [
+                    {z: 'ㄧ', p: 'yi', a: 'i'}, {z: 'ㄧㄚ', p: 'ya', a: 'ia'}, {z: 'ㄧㄛ', p: 'yo', a: 'io'}, 
+                    {z: 'ㄧㄝ', p: 'ye', a: 'ie'}, {z: 'ㄧㄠ', p: 'yao', a: 'iao'}, {z: 'ㄧㄡ', p: 'you', a: 'iu'}, 
+                    {z: 'ㄧㄢ', p: 'yan', a: 'ian'}, {z: 'ㄧㄣ', p: 'yin', a: 'in'}, {z: 'ㄧㄤ', p: 'yang', a: 'iang'}, 
+                    {z: 'ㄧㄥ', p: 'ying', a: 'ing'}
+                ]
+            },
+            {
+                title: '進階韻母 (ㄨ)',
+                items: [
+                    {z: 'ㄨ', p: 'wu', a: 'u'}, {z: 'ㄨㄚ', p: 'wa', a: 'ua'}, {z: 'ㄨㄛ', p: 'wo', a: 'uo'}, 
+                    {z: 'ㄨㄞ', p: 'wai', a: 'uai'}, {z: 'ㄨㄟ', p: 'wei', a: 'ui'}, {z: 'ㄨㄢ', p: 'wan', a: 'uan'}, 
+                    {z: 'ㄨㄣ', p: 'wen', a: 'un'}, {z: 'ㄨㄤ', p: 'wang', a: 'uang'}, {z: 'ㄨㄥ', p: 'weng', a: 'ong'}
+                ]
+            },
+            {
+                title: '進階韻母 (ㄩ)',
+                items: [
+                    {z: 'ㄩ', p: 'yu', a: 'u'}, {z: 'ㄩㄝ', p: 'yue', a: 'ue'}, {z: 'ㄩㄢ', p: 'yuan', a: 'uan'}, 
+                    {z: 'ㄩㄣ', p: 'yun', a: 'un'}, {z: 'ㄩㄥ', p: 'yong', a: 'iong'}
+                ]
+            },
+            {
+                title: '特殊組合',
+                items: [
+                    {z: 'ㄋㄩ', p: 'nv'}, {z: 'ㄌㄩ', p: 'lv'}
+                ]
+            }
         ];
 
+        // 扁平化資料用於練習
+        const data = sections.flatMap(s => s.items);
+
         // 生成對照表
-        const sheet = document.getElementById('sheet');
-        data.forEach(item => {
-            const div = document.createElement('div');
-            div.className = `item ${item.s ? 'special' : ''}`;
-            div.innerHTML = `<span class="zhuyin">${item.z}</span><span class="pinyin">${item.p}</span>`;
-            sheet.appendChild(div);
+        const cheatSheet = document.getElementById('sheet');
+        sections.forEach(section => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'section';
+            
+            let html = `<h2>${section.title}</h2><table>`;
+            
+            // 注音列
+            html += '<tr><td class="row-label">注音</td>';
+            section.items.forEach(item => {
+                html += `<td class="zhuyin-cell">${item.z}</td>`;
+            });
+            html += '</tr>';
+
+            // 拼音列 (單獨/主要)
+            const label = section.items[0].a ? '拼音 (單獨)' : '拼音';
+            html += `<tr><td class="row-label">${label}</td>`;
+            section.items.forEach(item => {
+                html += `<td class="pinyin-cell">${item.p}</td>`;
+            });
+            html += '</tr>';
+
+            // 聲母之後列 (如有)
+            if (section.items[0].a) {
+                html += '<tr><td class="row-label">拼音 (聲母之後)</td>';
+                section.items.forEach(item => {
+                    html += `<td class="pinyin-cell after-cell">${item.a}</td>`;
+                });
+                html += '</tr>';
+            }
+
+            html += '</table>';
+            sectionDiv.innerHTML = html;
+            cheatSheet.appendChild(sectionDiv);
         });
 
         let currentItem = {};
@@ -90,6 +180,7 @@
 
         iEl.addEventListener('input', (e) => {
             const val = e.target.value.toLowerCase().trim();
+            // 判斷是否正確 (部分組合可能有兩個正確答案，但這裡以單獨形式為主)
             if (val === currentItem.p) {
                 iEl.classList.add('correct');
                 setTimeout(next, 400);
