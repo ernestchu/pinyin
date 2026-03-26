@@ -240,38 +240,61 @@
                 ...sections.find(s => s.id === 'wu').items,
                 ...sections.find(s => s.id === 'yu').items
             ];
-            
-            // 隨選一個聲母和一個韻母
-            const init = initials[Math.floor(Math.random() * initials.length)];
-            const fin = allFinals[Math.floor(Math.random() * allFinals.length)];
 
-            // 處理排除規則 (簡單版)
-            // 1. ㄦ 不與聲母組合
-            if (fin.z === 'ㄦ') return generateCombination();
-            // 2. j/q/x 只與 i/u(yu) 組合
-            const isJQX = ['j', 'q', 'x'].includes(init.p);
-            const isIU = fin.z.startsWith('ㄧ') || fin.z.startsWith('ㄩ');
-            if (isJQX && !isIU) return generateCombination();
-            if (!isJQX && (init.p !== 'n' && init.p !== 'l') && fin.z.startsWith('ㄩ')) {
-                // 其他聲母不與 ㄩ 組合 (除了 n, l)
-                if (!['zh','ch','sh','r','z','c','s'].includes(init.p)) return generateCombination();
+            function isValidPair(init, fin) {
+                const initP = init.p;
+                const finZ = fin.z;
+                const isJQX = ['j', 'q', 'x'].includes(initP);
+                const isYuFinal = finZ.startsWith('ㄩ');
+                const isYiFinal = finZ.startsWith('ㄧ');
+                const isWuFinal = finZ.startsWith('ㄨ');
+
+                // ㄦ 不能和任何聲母拼
+                if (finZ === 'ㄦ') return false;
+
+                // j/q/x 只和 i/ü 系列拼
+                if (isJQX && !(isYiFinal || isYuFinal)) return false;
+
+                // ü 系列只給 j/q/x/n/l
+                if (isYuFinal && !['j', 'q', 'x', 'n', 'l'].includes(initP)) return false;
+
+                // 捲舌/舌尖聲母不直接接 ㄧ 系列（避免產生如 ㄓㄧ 這類非標準拼法）
+                if (isYiFinal && ['zh', 'ch', 'sh', 'r', 'z', 'c', 's'].includes(initP)) return false;
+
+                // b/p/m/f 不接 ㄨ 介音系列（只保留單獨的 ㄨ）
+                if (isWuFinal && finZ !== 'ㄨ' && ['b', 'p', 'm', 'f'].includes(initP)) return false;
+
+                // ㄧㄛ 不和聲母組合（一般不作為聲母後韻母）
+                if (finZ === 'ㄧㄛ') return false;
+
+                return true;
             }
 
-            let pinyin = init.p + fin.a;
+            // 隨機嘗試直到找到合法聲韻組合
+            for (let attempt = 0; attempt < 200; attempt++) {
+                const init = initials[Math.floor(Math.random() * initials.length)];
+                const fin = allFinals[Math.floor(Math.random() * allFinals.length)];
+                if (!isValidPair(init, fin)) continue;
 
-            // 特殊拼寫規則
-            // j/q/x + u... -> u (事實上是 ü，但在 input 通常打 u)
-            // n/l + u... (ㄩ) -> v
-            if (fin.z.startsWith('ㄩ')) {
-                if (init.p === 'n' || init.p === 'l') {
-                    pinyin = init.p + 'v' + (fin.a === 'u' ? '' : fin.a.substring(1));
+                let pinyin = init.p + fin.a;
+
+                // 特殊拼寫規則
+                // j/q/x + u... -> u (事實上是 ü，但在 input 通常打 u)
+                // n/l + u... (ㄩ) -> v
+                if (fin.z.startsWith('ㄩ')) {
+                    if (init.p === 'n' || init.p === 'l') {
+                        pinyin = init.p + 'v' + (fin.a === 'u' ? '' : fin.a.substring(1));
+                    }
                 }
+
+                return {
+                    z: init.z + fin.z,
+                    p: pinyin
+                };
             }
 
-            return {
-                z: init.z + fin.z,
-                p: pinyin
-            };
+            // 極端情況下的安全回退
+            return { z: 'ㄅㄚ', p: 'ba' };
         }
 
         // 生成對照表
