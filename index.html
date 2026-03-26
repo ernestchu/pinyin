@@ -284,9 +284,10 @@
             if (val === currentItem.p) {
                 iEl.classList.add('correct');
                 setTimeout(next, 400);
-            } else if (val.length >= currentItem.p.length) {
-                hEl.innerText = `提示：${currentItem.p}`;
             }
+            // else if (val.length >= currentItem.p.length) {
+            //     hEl.innerText = `提示：${currentItem.p}`;
+            // }
         });
 
         next();
