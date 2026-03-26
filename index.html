@@ -197,6 +197,7 @@
         const hEl = document.getElementById('hint-text');
         const iEl = document.getElementById('pinyin-input');
         let currentItem = {};
+        let level3ValidPairs = null;
 
         function setLevel(lv) {
             currentLevel = lv;
@@ -247,7 +248,6 @@
                 const isJQX = ['j', 'q', 'x'].includes(initP);
                 const isYuFinal = finZ.startsWith('ㄩ');
                 const isYiFinal = finZ.startsWith('ㄧ');
-                const isWuFinal = finZ.startsWith('ㄨ');
 
                 // ㄦ 不能和任何聲母拼
                 if (finZ === 'ㄦ') return false;
@@ -261,30 +261,32 @@
                 // 捲舌/舌尖聲母不直接接 ㄧ 系列（避免產生如 ㄓㄧ 這類非標準拼法）
                 if (isYiFinal && ['zh', 'ch', 'sh', 'r', 'z', 'c', 's'].includes(initP)) return false;
 
-                // b/p/m/f 不接 ㄨ 介音系列（只保留單獨的 ㄨ）
-                if (isWuFinal && finZ !== 'ㄨ' && ['b', 'p', 'm', 'f'].includes(initP)) return false;
-
                 // ㄧㄛ 不和聲母組合（一般不作為聲母後韻母）
                 if (finZ === 'ㄧㄛ') return false;
 
                 return true;
             }
 
-            // 隨機嘗試直到找到合法聲韻組合
-            for (let attempt = 0; attempt < 200; attempt++) {
-                const init = initials[Math.floor(Math.random() * initials.length)];
-                const fin = allFinals[Math.floor(Math.random() * allFinals.length)];
-                if (!isValidPair(init, fin)) continue;
+            if (!level3ValidPairs) {
+                level3ValidPairs = [];
+                initials.forEach(init => {
+                    allFinals.forEach(fin => {
+                        if (isValidPair(init, fin)) level3ValidPairs.push({ init, fin });
+                    });
+                });
+            }
 
+            if (level3ValidPairs.length > 0) {
+                const pair = level3ValidPairs[Math.floor(Math.random() * level3ValidPairs.length)];
+                const init = pair.init;
+                const fin = pair.fin;
                 let pinyin = init.p + fin.a;
 
                 // 特殊拼寫規則
                 // j/q/x + u... -> u (事實上是 ü，但在 input 通常打 u)
                 // n/l + u... (ㄩ) -> v
-                if (fin.z.startsWith('ㄩ')) {
-                    if (init.p === 'n' || init.p === 'l') {
-                        pinyin = init.p + 'v' + (fin.a === 'u' ? '' : fin.a.substring(1));
-                    }
+                if (fin.z.startsWith('ㄩ') && (init.p === 'n' || init.p === 'l')) {
+                    pinyin = init.p + 'v' + (fin.a === 'u' ? '' : fin.a.substring(1));
                 }
 
                 return {
